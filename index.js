@@ -11,9 +11,9 @@ let fieldGame = document.querySelector('.fieldGame'),
         direction: 'top',
     },
     bullets = {
-        speed: 10,
+        speed: 5,
     },
-    wallCount = 20,
+    wallCount = 50,
     // objWall = []
     walls;
 
@@ -44,12 +44,25 @@ function shoot () {
     fieldGame.append(bullet);
 
     function actionShoot (bullet, direction) {
+        let walls = document.querySelectorAll('.wall');
+
         switch (direction) {
             case 'top':
                 bullet.style.left = parseInt(bullet.style.left) + 14 + 'px';
                 bullet.style.top = parseInt(bullet.style.top) - 14 + 'px';
                 let shootFlyTop = setInterval(() => {
                     bullet.style.top = parseInt(bullet.style.top) - bullets.speed+'px';
+
+                    walls.forEach(wall=> {
+                        if (
+                            Math.abs(bullet.getBoundingClientRect()[direction] - wall.getBoundingClientRect()['bottom']) < 5 &&
+                            bullet.getBoundingClientRect().right > wall.getBoundingClientRect().left &&
+                            bullet.getBoundingClientRect().left < wall.getBoundingClientRect().right
+                        ) {
+                            bullet.remove();
+                        }
+                    });
+
                     if(bullet.getBoundingClientRect().y < fieldGame.getBoundingClientRect().y-25) {
                         clearInterval(shootFlyTop);
                     }
@@ -60,6 +73,17 @@ function shoot () {
                 bullet.style.top = parseInt(bullet.style.top) + 24 + 'px';
                 let shootFlyLeft = setInterval(() => {
                     bullet.style.left = parseInt(bullet.style.left) - bullets.speed+'px';
+
+                    walls.forEach(wall=> {
+                        if (
+                            Math.abs(bullet.getBoundingClientRect()[direction] - wall.getBoundingClientRect()['right']) < 5 &&
+                            bullet.getBoundingClientRect().bottom > wall.getBoundingClientRect().top &&
+                            bullet.getBoundingClientRect().top < wall.getBoundingClientRect().bottom
+                        ) {
+                            bullet.remove();
+                        }
+                    });
+
                     if(bullet.getBoundingClientRect().x < fieldGame.getBoundingClientRect().x-30) {
                         clearInterval(shootFlyLeft);
                     }
@@ -70,6 +94,17 @@ function shoot () {
                 bullet.style.top = parseInt(bullet.style.top) + 24 + 'px';
                 let shootFlyRight = setInterval(() => {
                     bullet.style.left = parseInt(bullet.style.left) + bullets.speed+'px';
+
+                    walls.forEach(wall=> {
+                        if (
+                            Math.abs(bullet.getBoundingClientRect()[direction] - wall.getBoundingClientRect()['right']) < 5 &&
+                            bullet.getBoundingClientRect().bottom > wall.getBoundingClientRect().top &&
+                            bullet.getBoundingClientRect().top < wall.getBoundingClientRect().bottom
+                        ) {
+                            bullet.remove();
+                        }
+                    });
+
                     if(bullet.getBoundingClientRect().x > fieldGame.getBoundingClientRect().width+30) {
                         clearInterval(shootFlyRight);
                     }
@@ -80,6 +115,17 @@ function shoot () {
                 bullet.style.top = parseInt(bullet.style.top) + 60 + 'px';
                 let shootFlyBottom = setInterval(() => {
                     bullet.style.top = parseInt(bullet.style.top) + bullets.speed+'px';
+
+                    walls.forEach(wall=> {
+                        if (
+                            Math.abs(bullet.getBoundingClientRect()[direction] - wall.getBoundingClientRect()['top']) < 5 &&
+                            bullet.getBoundingClientRect().right > wall.getBoundingClientRect().left &&
+                            bullet.getBoundingClientRect().left < wall.getBoundingClientRect().right
+                        ) {
+                            bullet.remove();
+                        }
+                    });
+
                     if(bullet.getBoundingClientRect().y > fieldGame.getBoundingClientRect().height+25) {
                         clearInterval(shootFlyBottom);
                     }
@@ -122,7 +168,7 @@ function controll() {
 
         function changeY(deg) {
             firstPlayer.el.style.transform = `rotate(${deg}deg)`;
-            if(firstPlayer.y <= 0)
+            if(firstPlayer.y < 0)
                 return firstPlayer.y = 0;
             if(firstPlayer.y >= fieldGame.getBoundingClientRect().height)
                 return firstPlayer.y = fieldGame.getBoundingClientRect().height;
@@ -139,7 +185,7 @@ function controll() {
 
         function changeX(deg) {
             firstPlayer.el.style.transform = `rotate(${deg}deg)`;
-            if(firstPlayer.x <= 0)
+            if(firstPlayer.x < 0)
                 return firstPlayer.x = 0;
             if(firstPlayer.x >= fieldGame.getBoundingClientRect().width)
                 return firstPlayer.x = fieldGame.getBoundingClientRect().width;
