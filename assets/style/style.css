@@ -1,0 +1,38 @@
+* {box-sizing: border-box;}
+body {
+    padding: 0;
+    margin: 0;
+}
+.fieldGame {
+    position: relative;
+    width: 1200px; height: 800px;
+    margin: 0;
+    background-image: url('./../img/bg.png');
+    border: 2px solid #333;
+}
+.player {
+    position: absolute;
+    width: 43px;
+    height: 63px;
+    background-size: cover;
+    transition: transform .3s;
+}
+.firstPlayer {
+    background-image: url("./../img/tank_1.png");
+}
+.secondPlayer {
+    background-image: url("./../img/tank_2.png");
+}
+.bullet {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: #dc143c;
+    border-radius: 50%;
+}
+.wall {
+    position: absolute;
+    background-image: url('./../img/wall.png');
+    width: 28px;
+    height: 20px;
+}
