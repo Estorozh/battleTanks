@@ -1,4 +1,5 @@
 //сделать трак, стрельбу, возможность второго игрока
+var socket = io();
 
 let fieldGame = document.querySelector('.fieldGame'),
     firstPlayer = {
@@ -9,28 +10,78 @@ let fieldGame = document.querySelector('.fieldGame'),
         run: false,
         name: 'player',
         direction: 'top',
+        transform: 'rotate(0deg)',
     },
+    // anotherPlayer = {
+    //     el: false,
+    //     x: 0,
+    //     y: 0,
+    //     speed: 5,
+    //     run: false,
+    //     name: 'player',
+    //     direction: 'top',
+    // },
     bullets = {
         speed: 5,
     },
-    wallCount = 50,
-    // objWall = []
-    walls;
+    wallCount = 10,
+    walls = [];
+firstPlayer.name = prompt('введите ваш ник', "player");
 
 function startGame() {
+    fieldGame.innerHTML = '';
+    // walls = [];
+
     fieldGame.innerHTML += `<div class="player firstPlayer" style="left: ${firstPlayer.x}px; top: ${firstPlayer.y}px;"></div>`;
-    firstPlayer.el = document.querySelector('.player');
+    firstPlayer.el = document.querySelector('.firstPlayer');
+
     for(i=0; i < wallCount; i++) {
         createWall();
     }
+
+    let theWalls = document.querySelectorAll('.wall');
+    theWalls.forEach((wall)=> {
+        let obj = {
+            'left': wall.style.left,
+            'top': wall.style.top
+        };
+        wall.style.transform ? obj.transform = true : null;
+
+        walls.push(obj);
+    });
+
+    socket.emit('start', walls);
 }
 
-function createWall() {
+function addFirstPlayer() {
+    fieldGame.innerHTML += `<div class="player firstPlayer" style="left: ${firstPlayer.x}px; top: ${firstPlayer.y}px;"></div>`;
+    firstPlayer.el = document.querySelector('.firstPlayer');
+}
+
+function addAnotherPlayer(anotherPlayer) {
+    if(!document.querySelector('.anotherPlayer')){
+        let tank = document.createElement('div');
+        tank.className = 'player anotherPlayer';
+        fieldGame.append(tank)
+    }
+
+    tank = document.querySelector('.anotherPlayer');
+    tank.style.cssText = `transform: ${anotherPlayer.transform}; left: ${anotherPlayer.x}px; top: ${anotherPlayer.y}px;`;
+}
+
+function createWall(theWall) {
     let wall = document.createElement('div');
     wall.classList.add('wall');
-    if (Math.random()*10>5) wall.style.transform = "rotate(90deg)";
-    wall.style.left = Math.random(0, fieldGame.getBoundingClientRect().width)*1000 + 'px';
-    wall.style.top = Math.random(0, fieldGame.getBoundingClientRect().height)*700 + 'px';
+    if(!theWall) {
+        if (Math.random() * 10 > 5) wall.style.transform = "rotate(90deg)";
+        wall.style.left = Math.random(0, fieldGame.getBoundingClientRect().width) * 1000 + 'px';
+        wall.style.top = Math.random(0, fieldGame.getBoundingClientRect().height) * 700 + 'px';
+    } else {
+        if(theWall.transform) wall.style.transform = "rotate(90deg)";
+        wall.style.left = theWall.left;
+        wall.style.top = theWall.top;
+    }
+
     fieldGame.append(wall);
 }
 
@@ -149,19 +200,19 @@ function controll() {
                 shoot();
                 break;
             case 37:
-                firstPlayer.direction = 'left';
+                firstPlayer.direction = 'left'; firstPlayer.transform = 'rotate(-90deg)';
                 changeX(-90);
                 break;
             case 38:
-                firstPlayer.direction = 'top';
+                firstPlayer.direction = 'top'; firstPlayer.transform = 'rotate(0deg)';
                 changeY(0);
                 break;
             case 39:
-                firstPlayer.direction = 'right';
+                firstPlayer.direction = 'right'; firstPlayer.transform = 'rotate(90deg)';
                 changeX(90);
                 break;
             case 40:
-                firstPlayer.direction = 'bottom';
+                firstPlayer.direction = 'bottom'; firstPlayer.transform = 'rotate(180deg)';
                 changeY(180);
                 break;
         }
@@ -233,5 +284,24 @@ function controll() {
 
 }
 
-startGame();
 controll();
+
+
+socket.emit('new player');
+
+setInterval(function() {
+    socket.emit('firstPlayer', firstPlayer);
+}, 1000/60);
+
+socket.on('statePlayers', function(players) {
+    players[socket.id]=null;
+    for (key in players) {
+        if(players[key]) addAnotherPlayer(players[key]);
+    }
+
+});
+
+socket.on('renderWorld', (walls) => {
+    walls.forEach((theWall)=>{createWall(theWall)});
+    if(!document.querySelector('.firstPlayer')) addFirstPlayer();
+});

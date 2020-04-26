@@ -15,12 +15,12 @@ body {
     width: 43px;
     height: 63px;
     background-size: cover;
-    transition: transform .3s;
+    transition: transform .3s, left 16ms, top 16ms;
 }
 .firstPlayer {
     background-image: url("./../img/tank_1.png");
 }
-.secondPlayer {
+.anotherPlayer {
     background-image: url("./../img/tank_2.png");
 }
 .bullet {
