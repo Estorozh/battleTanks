@@ -31,7 +31,7 @@ firstPlayer.name = prompt('введите ваш ник', "player");
 
 function startGame() {
     fieldGame.innerHTML = '';
-    // walls = [];
+    walls = [];
 
     fieldGame.innerHTML += `<div class="player firstPlayer" style="left: ${firstPlayer.x}px; top: ${firstPlayer.y}px;"></div>`;
     firstPlayer.el = document.querySelector('.firstPlayer');
