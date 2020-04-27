@@ -86,18 +86,27 @@ function createWall(theWall) {
     fieldGame.append(wall);
 }
 
-function shoot () {
+function shoot (newbullet, direction, newShoot = true) {
     let bullet = document.createElement('div');
     bullet.classList.add('bullet');
 
-    bullet.style.left = `${firstPlayer.x}px`;
-    bullet.style.top = `${firstPlayer.y}px`;
+    if(newShoot) {
+        bullet.style.left = `${firstPlayer.x}px`;
+        bullet.style.top = `${firstPlayer.y}px`;
+    } else {
+        bullet.style.left = newbullet[0];
+        bullet.style.top = newbullet[1];
+    }
 
     fieldGame.append(bullet);
 
     function actionShoot (bullet, direction = firstPlayer.direction) {
         let walls = document.querySelectorAll('.wall'),
             anotherPlayer = document.querySelector('.anotherPlayer');
+
+        if(newShoot) {
+            socket.emit('newShoot', [bullet.style.left, bullet.style.top], direction);
+        }
 
         switch (direction) {
             case 'top':
@@ -221,7 +230,7 @@ function shoot () {
         });
     }
 
-    return actionShoot(bullet);
+    if (newShoot) { return actionShoot(bullet); } else { return actionShoot(bullet, direction)}
 }
 
 function controll() {
@@ -347,4 +356,8 @@ socket.on('broken', ()=> {
     if (firstPlayer.health == 0) {
         document.body.innerHTML = '<h1 style="color: red">YOU LOSE!</h1>';
     }
+});
+
+socket.on('newBullet', (bullet, direction)=>{
+    shoot(bullet, direction, false)
 });

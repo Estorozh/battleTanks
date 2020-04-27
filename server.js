@@ -49,7 +49,11 @@ io.on('connection', function(socket) {
 
     socket.on('broken', () => {
         socket.broadcast.emit('broken')
-    })
+    });
+
+    socket.on('newShoot', (bullet, direction) => {
+        socket.broadcast.emit('newBullet', bullet, direction);
+    });
 });
 
 setInterval(function() {
