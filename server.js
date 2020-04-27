@@ -46,6 +46,10 @@ io.on('connection', function(socket) {
     socket.on('start',(walls) => {
         io.sockets.emit('renderWorld', walls);
     });
+
+    socket.on('broken', () => {
+        socket.broadcast.emit('broken')
+    })
 });
 
 setInterval(function() {

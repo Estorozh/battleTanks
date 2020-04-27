@@ -1,4 +1,4 @@
-//сделать трак, стрельбу, возможность второго игрока
+//сделать трак
 var socket = io();
 
 let fieldGame = document.querySelector('.fieldGame'),
@@ -11,6 +11,7 @@ let fieldGame = document.querySelector('.fieldGame'),
         name: 'player',
         direction: 'top',
         transform: 'rotate(0deg)',
+        health: 3,
     },
     // anotherPlayer = {
     //     el: false,
@@ -94,8 +95,9 @@ function shoot () {
 
     fieldGame.append(bullet);
 
-    function actionShoot (bullet, direction) {
-        let walls = document.querySelectorAll('.wall');
+    function actionShoot (bullet, direction = firstPlayer.direction) {
+        let walls = document.querySelectorAll('.wall'),
+            anotherPlayer = document.querySelector('.anotherPlayer');
 
         switch (direction) {
             case 'top':
@@ -117,6 +119,8 @@ function shoot () {
                     if(bullet.getBoundingClientRect().y < fieldGame.getBoundingClientRect().y-25) {
                         clearInterval(shootFlyTop);
                     }
+                    //добавить попадание в танк
+                    anotherPlayerBroken(anotherPlayer);
                 }, 1000/60);
                 break;
             case 'left':
@@ -138,6 +142,8 @@ function shoot () {
                     if(bullet.getBoundingClientRect().x < fieldGame.getBoundingClientRect().x-30) {
                         clearInterval(shootFlyLeft);
                     }
+
+                    anotherPlayerBroken(anotherPlayer);
                 }, 1000/60);
                 break;
             case 'right':
@@ -159,6 +165,8 @@ function shoot () {
                     if(bullet.getBoundingClientRect().x > fieldGame.getBoundingClientRect().width+30) {
                         clearInterval(shootFlyRight);
                     }
+
+                    anotherPlayerBroken(anotherPlayer);
                 }, 1000/60);
                 break;
             case 'bottom':
@@ -180,13 +188,40 @@ function shoot () {
                     if(bullet.getBoundingClientRect().y > fieldGame.getBoundingClientRect().height+25) {
                         clearInterval(shootFlyBottom);
                     }
+
+                    anotherPlayerBroken(anotherPlayer);
                 }, 1000/60);
                 break;
         }
 
     }
 
-    return actionShoot(bullet, firstPlayer.direction);
+    function anotherPlayerBroken(player) {
+        let bullets = document.querySelectorAll('.bullet'),
+            playerCoords = {
+                top: player.getBoundingClientRect().top,
+                right: player.getBoundingClientRect().right,
+                left: player.getBoundingClientRect().left,
+                bottom: player.getBoundingClientRect().bottom,
+            };
+            // broken = false;
+        bullets.forEach(bullet => {
+            let bulletCoords = {
+                top: bullet.getBoundingClientRect().top,
+                right: bullet.getBoundingClientRect().right,
+                left: bullet.getBoundingClientRect().left,
+                bottom: bullet.getBoundingClientRect().bottom
+            };
+            if (
+                playerCoords.top < bulletCoords.bottom &&
+                playerCoords.bottom > bulletCoords.top &&
+                playerCoords.right > bulletCoords.left &&
+                playerCoords.left < bulletCoords.right
+            ) { bullet.remove(); socket.emit('broken');}
+        });
+    }
+
+    return actionShoot(bullet);
 }
 
 function controll() {
@@ -304,4 +339,12 @@ socket.on('statePlayers', function(players) {
 socket.on('renderWorld', (walls) => {
     walls.forEach((theWall)=>{createWall(theWall)});
     if(!document.querySelector('.firstPlayer')) addFirstPlayer();
+});
+
+socket.on('broken', ()=> {
+    firstPlayer.health = firstPlayer.health - 1;
+    console.log(firstPlayer.health);
+    if (firstPlayer.health == 0) {
+        document.body.innerHTML = '<h1 style="color: red">YOU LOSE!</h1>';
+    }
 });
