@@ -7,7 +7,7 @@ var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
-app.set('port', 5000);
+app.set('port', process.env.PORT || 5000);
 app.use('/assets', express.static(__dirname + '/assets'));
 
 // Маршруты
@@ -16,7 +16,7 @@ app.get('/', function(request, response) {
 });
 
 // Запуск сервера
-server.listen(5000, function() {
+server.listen(process.env.PORT || 5000, function() {
     console.log('Запускаю сервер на порте 5000');
 });
 
@@ -41,6 +41,7 @@ io.on('connection', function(socket) {
         player.y = data.y;
         player.direction = data.direction;
         player.transform = data.transform;
+        player.health = data.health;
     });
 
     socket.on('start',(walls) => {
@@ -48,7 +49,16 @@ io.on('connection', function(socket) {
     });
 
     socket.on('broken', () => {
-        socket.broadcast.emit('broken')
+        console.log(players);
+        socket.broadcast.emit('broke')
+    });
+
+    socket.on('newShoot', (bullet, direction) => {
+        socket.broadcast.emit('newBullet', bullet, direction);
+    });
+
+    socket.on('GameOver', () => {
+        socket.broadcast.emit('Winner')
     })
 });
 

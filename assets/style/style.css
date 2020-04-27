@@ -38,6 +38,30 @@ body {
     width: 28px;
     height: 20px;
 }
+.cPanel {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: baseline;
+    width: calc(100% - 1200px);
+    padding-top: 10px;
+    padding-left: 10px;
+}
+.info {
+    width: 100%;
+    color: #dc143c;
+    font-weight: bold;
+    margin: 5px 0;
+}
+.systemInfo {
+    color: #333;
+}
+.bad, .good {
+    width: 100%;
+    font-weight: bold;
+    margin: 10px 0;
+}
+.bad { color: #dc143c; }
+.good { color: #006400}
 .btnStart {
     position: relative;
     font-family: 'RobotoRegular', sans-serif;

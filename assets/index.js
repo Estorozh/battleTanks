@@ -13,21 +13,16 @@ let fieldGame = document.querySelector('.fieldGame'),
         transform: 'rotate(0deg)',
         health: 3,
     },
-    // anotherPlayer = {
-    //     el: false,
-    //     x: 0,
-    //     y: 0,
-    //     speed: 5,
-    //     run: false,
-    //     name: 'player',
-    //     direction: 'top',
-    // },
+    infoRestart = '<span class="systemInfo">Auto restart game</span>',
+    winner = "<h1 class='good'>YOU WIN :)</h1>",
+    lose = "<h1 class='bad'>YOU LOSE :)</h1>",
+    cPanel = document.querySelector('.cPanel'),
     bullets = {
         speed: 5,
     },
     wallCount = 10,
     walls = [];
-firstPlayer.name = prompt('введите ваш ник', "player");
+// firstPlayer.name = prompt('введите ваш ник', "player");
 
 function startGame() {
     fieldGame.innerHTML = '';
@@ -86,18 +81,27 @@ function createWall(theWall) {
     fieldGame.append(wall);
 }
 
-function shoot () {
+function shoot (newbullet, direction, newShoot = true) {
     let bullet = document.createElement('div');
     bullet.classList.add('bullet');
 
-    bullet.style.left = `${firstPlayer.x}px`;
-    bullet.style.top = `${firstPlayer.y}px`;
+    if(newShoot) {
+        bullet.style.left = `${firstPlayer.x}px`;
+        bullet.style.top = `${firstPlayer.y}px`;
+    } else {
+        bullet.style.left = newbullet[0];
+        bullet.style.top = newbullet[1];
+    }
 
     fieldGame.append(bullet);
 
     function actionShoot (bullet, direction = firstPlayer.direction) {
         let walls = document.querySelectorAll('.wall'),
             anotherPlayer = document.querySelector('.anotherPlayer');
+
+        if(newShoot) {
+            socket.emit('newShoot', [bullet.style.left, bullet.style.top], direction);
+        }
 
         switch (direction) {
             case 'top':
@@ -117,7 +121,7 @@ function shoot () {
                     });
 
                     if(bullet.getBoundingClientRect().y < fieldGame.getBoundingClientRect().y-25) {
-                        clearInterval(shootFlyTop);
+                        clearInterval(shootFlyTop); bullet.remove();
                     }
                     //добавить попадание в танк
                     anotherPlayerBroken(anotherPlayer);
@@ -140,7 +144,7 @@ function shoot () {
                     });
 
                     if(bullet.getBoundingClientRect().x < fieldGame.getBoundingClientRect().x-30) {
-                        clearInterval(shootFlyLeft);
+                        clearInterval(shootFlyLeft); bullet.remove();
                     }
 
                     anotherPlayerBroken(anotherPlayer);
@@ -163,7 +167,7 @@ function shoot () {
                     });
 
                     if(bullet.getBoundingClientRect().x > fieldGame.getBoundingClientRect().width+30) {
-                        clearInterval(shootFlyRight);
+                        clearInterval(shootFlyRight); bullet.remove();
                     }
 
                     anotherPlayerBroken(anotherPlayer);
@@ -186,7 +190,7 @@ function shoot () {
                     });
 
                     if(bullet.getBoundingClientRect().y > fieldGame.getBoundingClientRect().height+25) {
-                        clearInterval(shootFlyBottom);
+                        clearInterval(shootFlyBottom); bullet.remove();
                     }
 
                     anotherPlayerBroken(anotherPlayer);
@@ -217,11 +221,15 @@ function shoot () {
                 playerCoords.bottom > bulletCoords.top &&
                 playerCoords.right > bulletCoords.left &&
                 playerCoords.left < bulletCoords.right
-            ) { bullet.remove(); socket.emit('broken');}
+            ) {
+                bullet.remove();
+                if(newShoot)
+                    socket.emit('broken');
+            }
         });
     }
 
-    return actionShoot(bullet);
+    if (newShoot) { return actionShoot(bullet); } else { return actionShoot(bullet, direction)}
 }
 
 function controll() {
@@ -341,10 +349,26 @@ socket.on('renderWorld', (walls) => {
     if(!document.querySelector('.firstPlayer')) addFirstPlayer();
 });
 
-socket.on('broken', ()=> {
+socket.on('broke', ()=> {
     firstPlayer.health = firstPlayer.health - 1;
-    console.log(firstPlayer.health);
+    console.log('you health: '+firstPlayer.health);
+
     if (firstPlayer.health == 0) {
-        document.body.innerHTML = '<h1 style="color: red">YOU LOSE!</h1>';
+        cPanel.innerHTML += lose + infoRestart;
+
+        socket.emit('GameOver');
+        firstPlayer.health = 3;
+        console.log('YOU LOSE '+firstPlayer.health);
+    } else {
+        cPanel.innerHTML += '<span class="info">Your health:'+ firstPlayer.health+'</span>';
     }
+});
+
+socket.on('newBullet', (bullet, direction)=>{
+    shoot(bullet, direction, false)
+});
+
+socket.on('Winner', () => {
+    cPanel.innerHTML += winner + infoRestart;
+    firstPlayer.health = 3;
 });
