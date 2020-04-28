@@ -7,7 +7,7 @@ var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
-app.set('port', 5000);
+app.set('port', process.env.PORT || 5000);
 app.use('/assets', express.static(__dirname + '/assets'));
 
 // Маршруты
@@ -16,7 +16,7 @@ app.get('/', function(request, response) {
 });
 
 // Запуск сервера
-server.listen(5000, function() {
+server.listen(process.env.PORT || 5000, function() {
     console.log('Запускаю сервер на порте 5000');
 });
 
@@ -36,39 +36,31 @@ io.on('connection', function(socket) {
 
     socket.on('firstPlayer', function(data) {
         var player = players[socket.id] || {};
-        player.name = data.name;
+        // player.name = data.name;
         player.x = data.x;
         player.y = data.y;
         player.direction = data.direction;
         player.transform = data.transform;
+        player.health = data.health;
     });
 
     socket.on('start',(walls) => {
-        io.sockets.emit('renderWorld', walls);
+        socket.broadcast.emit('renderWorld', walls);
     });
 
     socket.on('broken', () => {
-        socket.broadcast.emit('broken')
+        socket.broadcast.emit('broke')
     });
 
     socket.on('newShoot', (bullet, direction) => {
         socket.broadcast.emit('newBullet', bullet, direction);
     });
+
+    socket.on('GameOver', () => {
+        socket.broadcast.emit('Winner')
+    });
+
+    setInterval(function() {
+        socket.broadcast.emit('statePlayers', players);
+    }, 1000/60);
 });
-
-setInterval(function() {
-    io.sockets.emit('statePlayers', players);
-}, 1000/60);
-
-
-// io.sockets.on('theWalls',(data) => { console.log('get option walls '); io.sockets.emit('stateWalls', data) });
-
-
-
-// const server = require('http').createServer();
-// const io = require('socket.io')(server);
-// io.on('connection', client => {
-//     client.on('event', data => { /* … */ });
-//     client.on('disconnect', () => { /* … */ });
-// });
-// server.listen(3000);

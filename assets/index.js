@@ -13,21 +13,18 @@ let fieldGame = document.querySelector('.fieldGame'),
         transform: 'rotate(0deg)',
         health: 3,
     },
-    // anotherPlayer = {
-    //     el: false,
-    //     x: 0,
-    //     y: 0,
-    //     speed: 5,
-    //     run: false,
-    //     name: 'player',
-    //     direction: 'top',
-    // },
+    infoRestart = '<span class="systemInfo">Auto restart game</span>',
+    winner = "<h1 class='good'>YOU WIN :)</h1>",
+    lose = "<h1 class='bad'>YOU LOSE :)</h1>",
+    cPanel = document.querySelector('.cPanel'),
     bullets = {
-        speed: 5,
+        speed: 20,
+        count: 0,
+        restart: false,
     },
-    wallCount = 10,
+    wallCount = 5,
     walls = [];
-firstPlayer.name = prompt('введите ваш ник', "player");
+// firstPlayer.name = prompt('введите ваш ник', "player");
 
 function startGame() {
     fieldGame.innerHTML = '';
@@ -91,12 +88,19 @@ function shoot (newbullet, direction, newShoot = true) {
     bullet.classList.add('bullet');
 
     if(newShoot) {
+        if(bullets.restart) {
+            return false;
+        }
+        bullets.restart = true;
+        setTimeout(()=>{if(bullets.restart) bullets.restart=false },500);
+
         bullet.style.left = `${firstPlayer.x}px`;
         bullet.style.top = `${firstPlayer.y}px`;
     } else {
         bullet.style.left = newbullet[0];
         bullet.style.top = newbullet[1];
     }
+    // ++bullets.count;
 
     fieldGame.append(bullet);
 
@@ -125,8 +129,8 @@ function shoot (newbullet, direction, newShoot = true) {
                         }
                     });
 
-                    if(bullet.getBoundingClientRect().y < fieldGame.getBoundingClientRect().y-25) {
-                        clearInterval(shootFlyTop);
+                    if(bullet.getBoundingClientRect().y < fieldGame.getBoundingClientRect().y) {
+                        clearInterval(shootFlyTop); bullet.remove();
                     }
                     //добавить попадание в танк
                     anotherPlayerBroken(anotherPlayer);
@@ -148,8 +152,8 @@ function shoot (newbullet, direction, newShoot = true) {
                         }
                     });
 
-                    if(bullet.getBoundingClientRect().x < fieldGame.getBoundingClientRect().x-30) {
-                        clearInterval(shootFlyLeft);
+                    if(bullet.getBoundingClientRect().x < fieldGame.getBoundingClientRect().x) {
+                        clearInterval(shootFlyLeft); bullet.remove();
                     }
 
                     anotherPlayerBroken(anotherPlayer);
@@ -171,8 +175,8 @@ function shoot (newbullet, direction, newShoot = true) {
                         }
                     });
 
-                    if(bullet.getBoundingClientRect().x > fieldGame.getBoundingClientRect().width+30) {
-                        clearInterval(shootFlyRight);
+                    if(bullet.getBoundingClientRect().x > fieldGame.getBoundingClientRect().width) {
+                        clearInterval(shootFlyRight); bullet.remove();
                     }
 
                     anotherPlayerBroken(anotherPlayer);
@@ -194,8 +198,8 @@ function shoot (newbullet, direction, newShoot = true) {
                         }
                     });
 
-                    if(bullet.getBoundingClientRect().y > fieldGame.getBoundingClientRect().height+25) {
-                        clearInterval(shootFlyBottom);
+                    if(bullet.getBoundingClientRect().y > fieldGame.getBoundingClientRect().height) {
+                        clearInterval(shootFlyBottom); bullet.remove();
                     }
 
                     anotherPlayerBroken(anotherPlayer);
@@ -226,7 +230,11 @@ function shoot (newbullet, direction, newShoot = true) {
                 playerCoords.bottom > bulletCoords.top &&
                 playerCoords.right > bulletCoords.left &&
                 playerCoords.left < bulletCoords.right
-            ) { bullet.remove(); socket.emit('broken');}
+            ) {
+                bullet.remove();
+                if(newShoot)
+                    socket.emit('broken');
+            }
         });
     }
 
@@ -340,24 +348,38 @@ setInterval(function() {
 socket.on('statePlayers', function(players) {
     players[socket.id]=null;
     for (key in players) {
-        if(players[key]) addAnotherPlayer(players[key]);
+        if(players[key])
+            addAnotherPlayer(players[key]);
     }
 
 });
 
 socket.on('renderWorld', (walls) => {
     walls.forEach((theWall)=>{createWall(theWall)});
+
     if(!document.querySelector('.firstPlayer')) addFirstPlayer();
 });
 
-socket.on('broken', ()=> {
+socket.on('broke', ()=> {
     firstPlayer.health = firstPlayer.health - 1;
-    console.log(firstPlayer.health);
+    console.log('you health: '+firstPlayer.health);
+
     if (firstPlayer.health == 0) {
-        document.body.innerHTML = '<h1 style="color: red">YOU LOSE!</h1>';
+        cPanel.innerHTML += lose + infoRestart;
+
+        socket.emit('GameOver');
+        firstPlayer.health = 3;
+        console.log('YOU LOSE '+firstPlayer.health);
+    } else {
+        cPanel.innerHTML += '<span class="info">Your health:'+ firstPlayer.health+'</span>';
     }
 });
 
 socket.on('newBullet', (bullet, direction)=>{
     shoot(bullet, direction, false)
+});
+
+socket.on('Winner', () => {
+    cPanel.innerHTML += winner + infoRestart;
+    firstPlayer.health = 3;
 });
