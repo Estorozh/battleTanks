@@ -362,6 +362,8 @@ socket.on('statePlayers', function(players) {
 });
 
 socket.on('renderWorld', (walls) => {
+    document.querySelectorAll('.wall').forEach(wall=>wall.remove());
+
     walls.forEach((theWall)=>{createWall(theWall)});
 
     if(!document.querySelector('.firstPlayer')) addFirstPlayer();
