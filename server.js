@@ -6,6 +6,7 @@ var socketIO = require('socket.io');
 var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
+var countClient = 0;
 
 app.set('port', process.env.PORT || 5000);
 app.use('/assets', express.static(__dirname + '/assets'));
@@ -20,9 +21,15 @@ server.listen(process.env.PORT || 5000, function() {
     console.log('Запускаю сервер на порте 5000');
 });
 
-
 var players = {};
 io.on('connection', function(socket) {
+    countClient = countClient + 1;
+
+    switch (countClient) {
+        case 1: socket.emit('wait player');console.log('wait'); break;
+        case 2: socket.emit('start battle');console.log('start'); break;
+        default: socket.emit('sorry'); break;
+    }
     socket.on('new player', function(data) {
         players[socket.id] = {
             el: false,
@@ -32,6 +39,12 @@ io.on('connection', function(socket) {
             run: false,
             direction: 'top',
         };
+
+    });
+
+    socket.on('disconnect', function() {
+        delete players[socket.id];
+        countClient = countClient - 1;
     });
 
     socket.on('firstPlayer', function(data) {

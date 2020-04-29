@@ -16,6 +16,7 @@ let fieldGame = document.querySelector('.fieldGame'),
     infoRestart = '<span class="systemInfo">Auto restart game</span>',
     winner = "<h1 class='good'>YOU WIN :)</h1>",
     lose = "<h1 class='bad'>YOU LOSE :)</h1>",
+    recharge = document.createElement('span'),
     cPanel = document.querySelector('.cPanel'),
     bullets = {
         speed: 20,
@@ -25,8 +26,12 @@ let fieldGame = document.querySelector('.fieldGame'),
     wallCount = 5,
     walls = [];
 // firstPlayer.name = prompt('введите ваш ник', "player");
+recharge.classList.add('systemInfo');
+recharge.innerHTML = 'Снаряд перезаряжается';
 
 function startGame() {
+    recharge.innerHTML = 'Игра началась';
+    cPanel.append(recharge);
     fieldGame.innerHTML = '';
     walls = [];
 
@@ -89,6 +94,8 @@ function shoot (newbullet, direction, newShoot = true) {
 
     if(newShoot) {
         if(bullets.restart) {
+            cPanel.append(recharge);
+            setTimeout(()=>{recharge.remove() },500);
             return false;
         }
         bullets.restart = true;
@@ -383,3 +390,19 @@ socket.on('Winner', () => {
     cPanel.innerHTML += winner + infoRestart;
     firstPlayer.health = 3;
 });
+
+socket.on('start battle',()=>{ startGame() } );
+socket.on('sorry', ()=>{ sorry() } );
+socket.on('wait player', ()=>{ waitPlayer() } );
+
+function waitPlayer() {
+    socket.emit('disconnect');
+    recharge.innerHTML = 'ожидаем подключения второго игрока';
+    cPanel.append(recharge);
+}
+
+function sorry() {
+    socket.emit('disconnect');
+    recharge.innerHTML = 'извините, но игра настроена на двоих человек и уже проводится. Прийдите в другое время';
+    cPanel.append(recharge);
+}
