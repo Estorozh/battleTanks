@@ -61,8 +61,8 @@ io.on('connection', function(socket) {
         socket.broadcast.emit('renderWorld', walls);
     });
 
-    socket.on('broken', () => {
-        socket.broadcast.emit('broke')
+    socket.on('broken', (whoseBullet) => {
+        socket.broadcast.emit('broke', whoseBullet);
     });
 
     socket.on('newShoot', (bullet, direction) => {

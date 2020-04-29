@@ -23,7 +23,7 @@ let fieldGame = document.querySelector('.fieldGame'),
         count: 0,
         restart: false,
     },
-    wallCount = 5,
+    wallCount = 25,
     walls = [];
 // firstPlayer.name = prompt('введите ваш ник', "player");
 recharge.classList.add('systemInfo');
@@ -139,7 +139,7 @@ function shoot (newbullet, direction, newShoot = true) {
                     if(bullet.getBoundingClientRect().y < fieldGame.getBoundingClientRect().y) {
                         clearInterval(shootFlyTop); bullet.remove();
                     }
-                    //добавить попадание в танк
+                    //попадание в танк
                     anotherPlayerBroken(anotherPlayer);
                 }, 1000/60);
                 break;
@@ -240,7 +240,7 @@ function shoot (newbullet, direction, newShoot = true) {
             ) {
                 bullet.remove();
                 if(newShoot)
-                    socket.emit('broken');
+                    socket.emit('broken', socket.id);
             }
         });
     }
@@ -369,7 +369,8 @@ socket.on('renderWorld', (walls) => {
     if(!document.querySelector('.firstPlayer')) addFirstPlayer();
 });
 
-socket.on('broke', ()=> {
+socket.on('broke', (whoseBullet)=> {
+    if (socket.id == whoseBullet) {return false;}
     firstPlayer.health = firstPlayer.health - 1;
     console.log('you health: '+firstPlayer.health);
 
