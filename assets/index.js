@@ -405,6 +405,6 @@ function waitPlayer() {
 
 function sorry() {
     socket.emit('disconnect');
-    recharge.innerHTML = 'извините, но игра настроена на двоих человек и уже проводится. Прийдите в другое время';
+    recharge.innerHTML = 'извините, но игра настроена на двоих человек и уже проводится. Ждем вас в другое время. Если не будет лень, то сделаю комнаты :)';
     cPanel.append(recharge);
 }
